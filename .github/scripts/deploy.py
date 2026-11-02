@@ -38,4 +38,13 @@ def deploy():
 
 
 if __name__ == '__main__':
-    deploy()
+    try:
+        deploy()
+    except (OSError, ftplib.Error, SystemExit) as exc:
+        message = str(exc)
+        password = os.environ.get('FTP_PASSWORD')
+        if password:
+            message = message.replace(password, '[oculto]')
+        message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+        print(f'::error title=No se pudo publicar por FTPS::{message}', flush=True)
+        raise SystemExit(1)
