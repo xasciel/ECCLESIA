@@ -1,6 +1,6 @@
 <?php
 function ecclesia_campos_acta(): array {
- return ['iglesia'=>'Nombre de parroquia','direccion'=>'Dirección','tipo'=>'Tipo de acta','numero'=>'Número de acta','folio'=>'Folio','libro'=>'Libro','division'=>'Sublibro','periodo'=>'Periodo','fecha_acta'=>'Fecha del acta','nombre'=>'Nombre completo','nacimiento'=>'Fecha de nacimiento','lugar'=>'Lugar de nacimiento','padre'=>'Padre','madre'=>'Madre','padrinos'=>'Padrinos / testigos','observaciones'=>'Observaciones'];
+ return ['iglesia'=>'Nombre de parroquia','direccion'=>'Dirección','tipo'=>'Tipo de acta','numero'=>'Número de acta','folio'=>'Folio','libro'=>'Libro','periodo'=>'Periodo','fecha_acta'=>'Fecha del acta','nombre'=>'Nombre completo','nacimiento'=>'Fecha de nacimiento','lugar'=>'Lugar de nacimiento','padre'=>'Padre','madre'=>'Madre','padrinos'=>'Padrinos / testigos','observaciones'=>'Observaciones'];
 }
 function ecclesia_posiciones($json): array {
  $raw=json_decode((string)$json,true);if(!is_array($raw))return [];

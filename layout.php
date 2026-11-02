@@ -30,7 +30,7 @@ function top($title){
 <button type="button" class="ecclesia-toggle" id="toggleAgregar" aria-expanded="<?=$openAdd?'true':'false'?>" aria-controls="submenuAgregar"><span>Agregar</span><span class="chevron" aria-hidden="true">⌄</span></button>
 <div class="ecclesia-submenu <?=$openAdd?'is-open':''?>" id="submenuAgregar"><div class="side-subnav ecclesia-submenu-inner">
 <a class="<?=$current==='records.php'?'current':''?>" href="records.php">↳ Acta</a>
-<a href="books.php">↳ Libro / sublibro</a>
+<a href="books.php">↳ Libros</a>
 </div></div>
 <a class="<?=$current==='books.php'||$current==='ver_libro.php'?'current':''?>" href="books.php">Libros</a>
 <a class="<?=$current==='templates.php'?'current':''?>" href="templates.php">Formatos</a>

@@ -18,7 +18,7 @@ if (!$id || $id <= 0) {
 
 /*
 |--------------------------------------------------------------------------
-| CONSULTAR LIBRO O SUBLIBRO
+| CONSULTAR LIBRO
 |--------------------------------------------------------------------------
 */
 
@@ -44,74 +44,6 @@ if (!$book) {
     exit('No se encontró el libro en tu parroquia.');
 }
 
-/*
-|--------------------------------------------------------------------------
-| IDENTIFICAR SI ES SUBLIBRO
-|--------------------------------------------------------------------------
-*/
-
-$parentId = (int) ($book['parent_book_id'] ?? 0);
-$isSubbook = $parentId > 0;
-
-$parentBook = null;
-
-if ($isSubbook) {
-    $s = $db->prepare("
-        SELECT
-            id,
-            book_number,
-            sacrament,
-            year_start,
-            year_end
-        FROM books
-        WHERE id = ?
-          AND church_id = ?
-          AND parent_book_id IS NULL
-        LIMIT 1
-    ");
-
-    $s->execute([$parentId, $cid]);
-
-    $parentBook = $s->fetch(PDO::FETCH_ASSOC);
-}
-
-/*
-|--------------------------------------------------------------------------
-| CONSULTAR SUBLIBROS
-|--------------------------------------------------------------------------
-*/
-
-$s = $db->prepare("
-    SELECT
-        b.id,
-        b.division,
-        b.book_number,
-        (
-            SELECT COUNT(*)
-            FROM records r
-            WHERE r.book_id = b.id
-              AND r.church_id = b.church_id
-              AND r.deleted_at IS NULL
-        ) AS total_actas
-    FROM books b
-    WHERE b.parent_book_id = ?
-      AND b.church_id = ?
-    ORDER BY b.division ASC, b.id ASC
-");
-
-$s->execute([$id, $cid]);
-
-$childBooks = $s->fetchAll(PDO::FETCH_ASSOC);
-
-/*
-|--------------------------------------------------------------------------
-| CONSULTAR ACTAS
-|--------------------------------------------------------------------------
-| Libro principal: muestra sus actas y las de sus sublibros.
-| Sublibro: muestra únicamente sus propias actas.
-|--------------------------------------------------------------------------
-*/
-
 $s = $db->prepare("
     SELECT
         r.id,
@@ -135,28 +67,14 @@ $s = $db->prepare("
     WHERE r.church_id = ?
       AND r.deleted_at IS NULL
 
-      AND (
-          r.book_id = ?
-
-          OR r.book_id IN (
-              SELECT sb.id
-              FROM books sb
-              WHERE sb.parent_book_id = ?
-                AND sb.church_id = ?
-          )
-      )
+      AND r.book_id = ?
 
     ORDER BY
         r.sacrament_date DESC,
         r.id DESC
 ");
 
-$s->execute([
-    $cid,
-    $id,
-    $id,
-    $cid
-]);
+$s->execute([$cid, $id]);
 
 $records = $s->fetchAll(PDO::FETCH_ASSOC);
 
@@ -170,17 +88,14 @@ $totalRecords = count($records);
 
 require 'layout.php';
 
-top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
+top('Detalle del libro');
 ?>
 
 <div class="page-head">
 
     <div>
         <h1>
-            <?= $isSubbook
-                ? 'Información del sublibro'
-                : 'Información del libro'
-            ?>
+            Información del libro
         </h1>
 
         <p class="muted">
@@ -190,22 +105,11 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
 
     <div class="actions">
 
-        <?php if ($isSubbook && $parentBook): ?>
-
-            <a
-                class="btn secondary"
-                href="ver_libro.php?id=<?= (int) $parentBook['id'] ?>"
-            >
-                ← Volver al libro principal
-            </a>
-
-        <?php endif; ?>
-
         <a
             class="btn secondary"
             href="agregar.php?edit=<?= $id ?>"
         >
-            Editar <?= $isSubbook ? 'sublibro' : 'libro' ?>
+            Editar libro
         </a>
 
         <a
@@ -219,36 +123,6 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
 
 </div>
 
-<?php if ($isSubbook && $parentBook): ?>
-
-    <section class="card">
-
-        <p class="muted small">
-            Libro principal al que pertenece
-        </p>
-
-        <h2>
-            <?= e($parentBook['book_number']) ?>
-        </h2>
-
-        <p class="muted">
-            Periodo:
-            <?= e($parentBook['year_start']) ?>
-            –
-            <?= e($parentBook['year_end']) ?>
-        </p>
-
-        <a
-            class="btn secondary"
-            href="ver_libro.php?id=<?= (int) $parentBook['id'] ?>"
-        >
-            Ver libro principal
-        </a>
-
-    </section>
-
-<?php endif; ?>
-
 <!-- INFORMACIÓN GENERAL -->
 
 <section class="card">
@@ -257,7 +131,7 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
         <?= e($book['book_number']) ?>
 
         <?php if (!empty($book['division'])): ?>
-            · Sublibro <?= e($book['division']) ?>
+            · <?= e($book['division']) ?>
         <?php endif; ?>
     </h2>
 
@@ -311,10 +185,7 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
 
             <p>
                 <strong>
-                    <?= $isSubbook
-                        ? 'Sublibro'
-                        : 'Libro principal'
-                    ?>
+                    Libro
                 </strong>
             </p>
         </div>
@@ -334,115 +205,13 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
 
 </section>
 
-<!-- SUBLIBROS DEL LIBRO PRINCIPAL -->
-
-<?php if (!$isSubbook): ?>
-
-    <section class="card">
-
-        <div class="page-head">
-
-            <div>
-                <h2>
-                    Sublibros registrados
-                    (<?= count($childBooks) ?>)
-                </h2>
-
-                <p class="muted">
-                    Divisiones pertenecientes a este libro.
-                </p>
-            </div>
-
-            <a
-                class="btn secondary"
-                href="agregar.php?tipo=sublibro&parent=<?= $id ?>"
-            >
-                + Agregar sublibro
-            </a>
-
-        </div>
-
-        <?php if ($childBooks): ?>
-
-            <div class="table-scroll">
-
-                <table>
-
-                    <thead>
-                        <tr>
-                            <th>Sublibro</th>
-                            <th>Actas</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <?php foreach ($childBooks as $sub): ?>
-
-                            <tr>
-
-                                <td>
-                                    <strong>
-                                        <?= e($sub['division']) ?>
-                                    </strong>
-                                </td>
-
-                                <td>
-                                    <?= (int) $sub['total_actas'] ?>
-                                </td>
-
-                                <td>
-
-                                    <div class="actions">
-
-                                        <a
-                                            class="btn secondary"
-                                            href="ver_libro.php?id=<?= (int) $sub['id'] ?>"
-                                        >
-                                            Ver sublibro
-                                        </a>
-
-                                        <a
-                                            class="btn secondary"
-                                            href="agregar.php?tipo=sublibro&edit=<?= (int) $sub['id'] ?>"
-                                        >
-                                            Editar
-                                        </a>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        <?php endforeach; ?>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        <?php else: ?>
-
-            <p class="muted">
-                Este libro no tiene sublibros registrados.
-            </p>
-
-        <?php endif; ?>
-
-    </section>
-
-<?php endif; ?>
-
 <!-- ACTAS REGISTRADAS -->
 
 <section class="card">
 
     <h2>
         Actas de este
-        <?= $isSubbook ? 'sublibro' : 'libro' ?>
+        libro
         (<?= $totalRecords ?>)
     </h2>
 
@@ -456,7 +225,6 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
                     <th>Folio</th>
                     <th>Persona</th>
                     <th>Fecha</th>
-                    <th>Sublibro</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -491,12 +259,7 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
                             ) ?>
                         </td>
 
-                        <td>
-                            <?= e(
-                                $r['division']
-                                ?: 'Sin división'
-                            ) ?>
-                        </td>
+
 
                         <td>
 
@@ -527,7 +290,7 @@ top($isSubbook ? 'Detalle del sublibro' : 'Detalle del libro');
                 <?php if (!$records): ?>
 
                     <tr>
-                        <td colspan="6">
+                        <td colspan="5">
                             Todavía no hay actas registradas.
                         </td>
                     </tr>

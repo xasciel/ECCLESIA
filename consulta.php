@@ -56,7 +56,7 @@ top('Actas del expediente');
     <h2>Actas registradas (<?=count($acts)?>)</h2>
     <div class="table-scroll">
         <table>
-            <thead><tr><th>Tipo de acta</th><th>Libro / Sublibro</th><th>Fecha</th><th>Número</th><th>Folio</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Tipo de acta</th><th>Libro</th><th>Fecha</th><th>Número</th><th>Folio</th><th>Acciones</th></tr></thead>
             <tbody>
             <?php foreach ($acts as $act): ?>
                 <tr>
