@@ -1,4 +1,4 @@
-"""Publica los archivos revisados sin tocar database.php ni archivos del usuario."""
+"""Publica los cambios sin modificar la configuración del hosting."""
 import ftplib
 import os
 from pathlib import Path
@@ -7,7 +7,7 @@ import ssl
 FILES = (
     'agregar.php', 'books.php', 'bootstrap.php', 'consulta.php',
     'imprimir_acta.php', 'layout.php', 'plantilla_campos.php',
-    'records.php', 'ver_libro.php',
+    'records.php', 'ver_libro.php', 'assets/style.css',
 )
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -15,26 +15,42 @@ ROOT = Path(__file__).resolve().parents[2]
 def deploy():
     password = os.environ.get('FTP_PASSWORD')
     if not password:
-        raise SystemExit('Falta configurar el secreto FTP_PASSWORD en GitHub Actions.')
+        raise SystemExit('Falta el secreto FTP_PASSWORD en GitHub Actions.')
+
     for filename in FILES:
         if not (ROOT / filename).is_file():
             raise SystemExit(f'Falta el archivo: {filename}')
-    with ftplib.FTP_TLS(context=ssl.create_default_context(), timeout=60) as ftp:
+
+    with ftplib.FTP_TLS(
+        context=ssl.create_default_context(), timeout=60
+    ) as ftp:
         ftp.connect('ftpupload.net', 21)
         ftp.login('if0_42901477', password)
         ftp.prot_p()
         ftp.cwd('/ecclesia.free.nf/htdocs')
-        # bootstrap.php necesita este archivo, que contiene la configuración local.
-        if 'database.php' not in ftp.nlst():
-            raise SystemExit('Falta database.php en el hosting; no se publicaron cambios.')
+
+        if not any(
+            name.rstrip('/').split('/')[-1] == 'database.php'
+            for name in ftp.nlst('config')
+        ):
+            raise SystemExit('Falta config/database.php en el hosting.')
+
+        folders = {
+            name.rstrip('/').split('/')[-1]
+            for name in ftp.nlst()
+        }
+        if 'assets' not in folders:
+            ftp.mkd('assets')
+
         for filename in FILES:
+            temporary = f'{filename}.upload{Path(filename).suffix}'
             with (ROOT / filename).open('rb') as source:
-                ftp.storbinary(f'STOR {filename}.upload', source)
-        # Se transfieren todos antes de reemplazar los archivos publicados.
+                ftp.storbinary(f'STOR {temporary}', source)
+
         for filename in FILES:
-            ftp.rename(f'{filename}.upload', filename)
+            temporary = f'{filename}.upload{Path(filename).suffix}'
+            ftp.rename(temporary, filename)
             print(f'Publicado: {filename}')
-        ftp.quit()
 
 
 if __name__ == '__main__':
@@ -45,6 +61,13 @@ if __name__ == '__main__':
         password = os.environ.get('FTP_PASSWORD')
         if password:
             message = message.replace(password, '[oculto]')
-        message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-        print(f'::error title=No se pudo publicar por FTPS::{message}', flush=True)
+        message = (
+            message.replace('%', '%25')
+            .replace('\r', '%0D')
+            .replace('\n', '%0A')
+        )
+        print(
+            f'::error title=Error de despliegue::{message}',
+            flush=True,
+        )
         raise SystemExit(1)

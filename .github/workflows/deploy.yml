@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
     paths:
+        
+      - '*.php'
+      - 'assets/**'
+      - '.github/workflows/deploy.yml'
+      - '.github/scripts/deploy.py'
+      - 'tests/**'
+
       - '*.php'
       - '.github/workflows/deploy.yml'
       - '.github/scripts/deploy.py'
