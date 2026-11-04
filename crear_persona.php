@@ -1,5 +1,5 @@
 <?php
-require 'bootstrap.php';require_church();header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
+require 'bootstrap.php';require_church();require_permission('create');header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
 if($_SERVER['REQUEST_METHOD']!=='POST'){http_response_code(405);echo json_encode(['error'=>'Método no permitido']);exit;}
 verify_csrf();$cid=(int)me()['church_id'];$first=trim($_POST['first_names']??'');$last=trim($_POST['last_names']??'');
 if($first===''||$last===''){http_response_code(422);echo json_encode(['error'=>'Ingresa nombres y apellidos']);exit;}

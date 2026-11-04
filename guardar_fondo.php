@@ -1,5 +1,5 @@
 <?php
-require 'bootstrap.php';require_church();
+require 'bootstrap.php';require_church();require_permission('templates');
 header('Content-Type: application/json; charset=utf-8');
 function fail_clean($msg,$code=400){http_response_code($code);echo json_encode(['ok'=>false,'error'=>$msg]);exit;}
 if($_SERVER['REQUEST_METHOD']!=='POST')fail_clean('Método inválido',405);

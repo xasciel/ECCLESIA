@@ -3,6 +3,7 @@ require 'bootstrap.php';require_church();require_once 'catalogo.php';
 $cid=(int)me()['church_id'];$types=ecclesia_tipos();$msg='';
 $editId=(int)($_GET['edit']??0);$edit=null;
 if($editId){$s=$db->prepare('SELECT * FROM books WHERE id=? AND church_id=?');$s->execute([$editId,$cid]);$edit=$s->fetch(PDO::FETCH_ASSOC);if(!$edit){http_response_code(404);exit('Libro no encontrado');}}
+require_permission(((int)($_POST['id']??$editId))?'edit':'create');
 if($_SERVER['REQUEST_METHOD']==='POST'){
  verify_csrf();$id=(int)($_POST['id']??0);
  $num=trim($_POST['book_number']??'');$sac=trim($_POST['sacrament']??'');

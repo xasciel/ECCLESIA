@@ -4,11 +4,15 @@ import os
 from pathlib import Path
 import ssl
 
+# Primero dependencias y autenticación; después las pantallas que las utilizan.
 FILES = (
-    'agregar.php', 'books.php', 'bootstrap.php', 'consulta.php',
-    'imprimir_acta.php', 'layout.php', 'plantilla_campos.php',
-    'records.php', 'ver_libro.php', 'assets/style.css',
+    'permissions.php', 'assets/app.js', 'assets/style.css', 'bootstrap.php', 'index.php',
+    'agregar.php', 'books.php', 'consulta.php', 'imprimir_acta.php',
+    'plantilla_campos.php', 'records.php', 'ver_libro.php', 'dashboard.php',
+    'team.php', 'crear_persona.php', 'guardar_fondo.php', 'types.php',
+    'templates.php', 'layout.php',
 )
+
 ROOT = Path(__file__).resolve().parents[2]
 
 

@@ -2,6 +2,7 @@
 require 'bootstrap.php'; require_church();
 $cid=(int)me()['church_id']; $msg='';
 if($_SERVER['REQUEST_METHOD']==='POST'){
+ require_permission('templates');
  verify_csrf(); $action=$_POST['action']??''; $id=(int)($_POST['id']??0);
  if($action==='save'){
   $name=trim((string)($_POST['name']??''));

@@ -2,6 +2,7 @@
 require 'bootstrap.php';require_church();require_once 'catalogo.php';require_once 'plantilla_campos.php';
 $cid=(int)me()['church_id'];$msg='';$types=ecclesia_tipos();$fields=ecclesia_campos_acta();
 if($_SERVER['REQUEST_METHOD']==='POST'){
+ require_permission('templates');
  verify_csrf();$action=$_POST['action']??'';
  if($action==='layout'){
   $tid=(int)($_POST['template_id']??0);$s=$db->prepare('SELECT id FROM templates WHERE id=? AND church_id=?');$s->execute([$tid,$cid]);

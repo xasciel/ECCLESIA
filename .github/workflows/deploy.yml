@@ -4,14 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-        
       - '*.php'
       - 'assets/**'
-      - '.github/workflows/deploy.yml'
-      - '.github/scripts/deploy.py'
-      - 'tests/**'
-
-      - '*.php'
       - '.github/workflows/deploy.yml'
       - '.github/scripts/deploy.py'
       - 'tests/**'
@@ -40,7 +34,11 @@ jobs:
       - name: Validar cambios
         run: |
           python3 -B -m unittest discover -s tests -v
-          for file in agregar.php books.php bootstrap.php consulta.php imprimir_acta.php layout.php plantilla_campos.php records.php ver_libro.php; do
+          node --check assets/app.js
+          for scenario in owner collaborator other_church_owner tenant_mismatch superadmin; do
+            php tests/permissions_check.php "$scenario" || exit 1
+          done
+          for file in index.php permissions.php team.php crear_persona.php guardar_fondo.php types.php templates.php dashboard.php agregar.php books.php bootstrap.php consulta.php imprimir_acta.php layout.php plantilla_campos.php records.php ver_libro.php; do
             php -l "$file" || exit 1
           done
       - name: Subir cambios por FTPS

@@ -1,5 +1,5 @@
 <?php
-require 'bootstrap.php';require_church();require_once 'plantilla_campos.php';
+require 'bootstrap.php';require_church();require_permission('print');require_once 'plantilla_campos.php';
 $cid=(int)me()['church_id'];$id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);if(!$id){http_response_code(400);exit('Acta inválida');}
 $s=$db->prepare('SELECT r.*,p.first_names,p.last_names,p.birth_date,p.birthplace,p.father_name,p.mother_name,b.book_number,b.division,b.year_start,b.year_end,b.sacrament FROM records r JOIN people p ON p.id=r.person_id AND p.church_id=r.church_id JOIN books b ON b.id=r.book_id AND b.church_id=r.church_id WHERE r.id=? AND r.church_id=? AND r.deleted_at IS NULL LIMIT 1');$s->execute([$id,$cid]);$r=$s->fetch(PDO::FETCH_ASSOC);if(!$r){http_response_code(404);exit('Acta no encontrada');}
 $s=$db->prepare('SELECT name,address FROM churches WHERE id=?');$s->execute([$cid]);$church=$s->fetch(PDO::FETCH_ASSOC)?:[];
